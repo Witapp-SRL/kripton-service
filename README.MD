@@ -1,3 +1,19 @@
+/tuo_progetto/
+├── backend/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── project/
+│   ├── portal_app/
+│   └── manage.py
+├── frontend/
+│   └── Dockerfile
+├── .env
+├── docker-compose.yml
+└── install_docker_ubuntu.sh
+
+
+
+
 # Questo crea la cartella 'frontend' con un template React
 npm create vite@latest frontend -- --template react
 
