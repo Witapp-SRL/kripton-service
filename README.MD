@@ -12,6 +12,15 @@
 └── install_docker_ubuntu.sh
 
 
+Salva il file.
+
+Rendilo eseguibile: chmod +x install_docker_ubuntu.sh
+
+Eseguilo: ./install_docker_ubuntu.sh
+
+Esegui il logout e il login per attivare i permessi di gruppo.
+
+
 
 
 # Questo crea la cartella 'frontend' con un template React
