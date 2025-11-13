@@ -11,3 +11,8 @@ npm install @mui/material @emotion/react @emotion/styled @mui/x-data-grid
 
 # Installa la libreria per i grafici
 npm install recharts
+
+#Installazione
+docker compose up --build
+docker compose exec backend python manage.py migrate
+docker compose exec backend python manage.py createsuperuser
