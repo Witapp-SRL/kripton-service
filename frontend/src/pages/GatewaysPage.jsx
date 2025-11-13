@@ -1,88 +1,104 @@
 import React, { useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
-import { Paper, TextField, MenuItem, Box, Typography } from '@mui/material';
+import { Paper, Box, Typography, CircularProgress, Alert } from '@mui/material';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 
-const LogsPage = () => {
-  const [logs, setLogs] = useState([]);
-  const [loading, setLoading] = useState(false);
+// Funzione helper per formattare lo stato
+const getStatusChip = (lastCall) => {
+  if (!lastCall) {
+    return { label: 'Mai', color: 'grey.500' };
+  }
   
-  // Stati per i filtri
-  const [filterLevel, setFilterLevel] = useState(''); // 'ERROR', 'WARNING', ''
-  const [filterSearch, setFilterSearch] = useState('');
+  const lastCallDate = new Date(lastCall);
+  const now = new Date();
+  const diffMinutes = (now - lastCallDate) / (1000 * 60);
+
+  if (diffMinutes <= 15) {
+    return { label: 'Online', color: 'success.main' };
+  } else if (diffMinutes <= 60) {
+    return { label: 'Inattivo', color: 'warning.main' };
+  } else {
+    return { label: 'Offline', color: 'error.main' };
+  }
+};
+
+const GatewaysPage = () => {
+  const [gateways, setGateways] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   // Colonne per DataGrid
   const columns = [
-    { field: 'id', headerName: 'ID', width: 90 },
-    { field: 'datetime', headerName: 'Timestamp', width: 200, 
-      valueFormatter: (params) => new Date(params.value).toLocaleString() 
+    { field: 'pk', headerName: 'ID', width: 70 },
+    { field: 'gtw_name', headerName: 'Nome', width: 150 },
+    { field: 'gtw_uid', headerName: 'Gateway UID', width: 250 },
+    { 
+      field: 'last_date_call', 
+      headerName: 'Ultimo Contatto', 
+      width: 200,
+      valueFormatter: (params) => {
+        return params.value ? new Date(params.value).toLocaleString() : 'N/A';
+      }
     },
-    { field: 'level', headerName: 'Livello', width: 100 },
-    { field: 'batch_name', headerName: 'Batch', width: 150 }, // Il nostro campo virtuale
-    { field: 'action', headerName: 'Azione', width: 100 },
-    { field: 'description', headerName: 'Descrizione', width: 400 },
-    { field: 'doc_channel', headerName: 'Canale', width: 130 },
+    { 
+      field: 'status', 
+      headerName: 'Stato', 
+      width: 120,
+      renderCell: (params) => {
+        // Usiamo 'last_date_call' per determinare lo stato
+        const status = getStatusChip(params.row.last_date_call);
+        return (
+          <Box 
+            sx={{ 
+              color: status.color, 
+              border: `1px solid ${status.color}`, 
+              borderRadius: '16px', 
+              padding: '4px 8px',
+              backgroundColor: `${status.color.split('.')[0]}.lighter`, // Funziona se usi un tema MUI completo
+            }}
+          >
+            {status.label}
+          </Box>
+        );
+      }
+    },
+    { field: 'sw_version', headerName: 'Ver. SW', width: 100 },
+    { field: 'current_version', headerName: 'Ver. Attuale', width: 100 },
+    { field: 'gateway_description', headerName: 'Descrizione', width: 250 },
   ];
 
   useEffect(() => {
-    const fetchLogs = async () => {
+    const fetchGateways = async () => {
       setLoading(true);
+      setError('');
       try {
-        // Costruisci i parametri di query
-        const params = new URLSearchParams();
-        if (filterLevel) params.append('level', filterLevel);
-        if (filterSearch) params.append('search', filterSearch);
-
-        const response = await axiosClient.get(`/logs/?${params.toString()}`);
-        setLogs(response.data.results || []); // Gestisce la paginazione
+        const response = await axiosClient.get('/gateways/');
+        setGateways(response.data.results || []); // Gestisce la paginazione
       } catch (err) {
+        setError('Impossibile caricare i gateway.');
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
     
-    // Attendi 500ms prima di lanciare la ricerca (debounce)
-    const timerId = setTimeout(fetchLogs, 500);
-    return () => clearTimeout(timerId);
-    
-  }, [filterLevel, filterSearch]); // Ricarica i dati quando i filtri cambiano
+    fetchGateways();
+  }, []); // Esegui solo al caricamento
+
+  if (loading) return <CircularProgress />;
+  if (error) return <Alert severity="error">{error}</Alert>;
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>Log Eventi</Typography>
+      <Typography variant="h4" gutterBottom>Gestione Gateway</Typography>
       
-      {/* Box dei Filtri */}
-      <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>
-        <TextField
-          select
-          label="Livello"
-          value={filterLevel}
-          onChange={(e) => setFilterLevel(e.target.value)}
-          sx={{ minWidth: 150 }}
-        >
-          <MenuItem value="">Tutti</MenuItem>
-          <MenuItem value="ERROR">Error</MenuItem>
-          <MenuItem value="WARNING">Warning</MenuItem>
-          <MenuItem value="INFO">Info</MenuItem>
-        </TextField>
-        <TextField
-          label="Cerca..."
-          value={filterSearch}
-          onChange={(e) => setFilterSearch(e.target.value)}
-          sx={{ minWidth: 300 }}
-        />
-      </Box>
-      
-      {/* Tabella dei Log */}
+      {/* Tabella dei Gateway */}
       <Paper style={{ height: 600, width: '100%' }}>
         <DataGrid
-          rows={logs}
+          rows={gateways}
           columns={columns}
+          getRowId={(row) => row.pk} // Specifica 'pk' come ID univoco
           loading={loading}
-          pagination // Abilita paginazione (se il backend la supporta)
-          // Se usi la paginazione di Django, dovrai implementare
-          // la modalità "server" di DataGrid.
           components={{ Toolbar: GridToolbar }} // Aggiunge filtri, export, etc.
         />
       </Paper>
@@ -90,4 +106,4 @@ const LogsPage = () => {
   );
 };
 
-export default LogsPage;
+export default GatewaysPage;
