@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+    # Monta il volume per lo sviluppo live (commentare per produzione)
+    volumes:
+      - ./backend:/app
+    ports:
+      # Mappa la porta 8000 del container alla porta 8000 dell'host
+      - "8000:8000"
+    # Carica le variabili dal file .env
+    env_file:
+      - .env
+
+  frontend:
+    build:
+      context: ./frontend
+    # Monta il volume per lo sviluppo live (commentare per produzione)
+    volumes:
+      - ./frontend:/app
+      # Evita che node_modules venga sovrascritto dal volume
+      - /app/node_modules 
+    ports:
+      # Mappa la porta 3000 del container alla porta 3000 dell'host
+      - "3000:80" # (usiamo 80 perché Nginx è in ascolto su quella porta)
+    depends_on:
+      - backend
+
+# NOTA: Non includiamo un database (PostgreSQL) perché ci stiamo
+# connettendo a quello *esistente* come da tua richiesta.
+# L'IP e le credenziali del DB andranno nel file .env.
