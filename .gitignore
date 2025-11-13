@@ -1,0 +1,20 @@
+# Ignora le variabili d'ambiente e i segreti
+.env
+
+# Ignora le dipendenze di Python (venv)
+.venv/
+venv/
+
+# Ignora le dipendenze di Node.js
+frontend/node_modules/
+
+# Ignora i file di build del frontend
+frontend/dist/
+frontend/.DS_Store
+
+# Ignora i file di cache di Python
+__pycache__/
+*.pyc
+
+# File di Docker
+.dockerignore
