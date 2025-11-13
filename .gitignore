@@ -1,5 +1,5 @@
 # Ignora le variabili d'ambiente e i segreti
-.env
+#.env
 
 # Ignora le dipendenze di Python (venv)
 .venv/
